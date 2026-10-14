@@ -1,26 +1,51 @@
 // ==========================================
 // NORTH STAR BAKERY - SCRIPT.JS
-// Product Favoriting Feature with localStorage
+// Product Favoriting Feature with Live Favorites Section & localStorage
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM loaded - initializing favorites");
     initProductFavorites();
 });
 
 function initProductFavorites() {
     const favoriteButtons = document.querySelectorAll(".favorite-btn");
-    console.log("Found favorite buttons:", favoriteButtons.length);
+    const favoritesList = document.getElementById("favorites-list");
     
     if (favoriteButtons.length === 0) return;
 
     // Load saved favorites from localStorage or initialize an empty array
     let savedFavorites = JSON.parse(localStorage.getItem("nsb_favorites")) || [];
 
+    // Helper function to update the separate favorites display section
+    function updateFavoritesDisplay() {
+        if (!favoritesList) return;
+        
+        favoritesList.innerHTML = ""; // Clear current list
+
+        if (savedFavorites.length === 0) {
+            favoritesList.innerHTML = `<li><em>No favorites selected yet. Click "☆ Favorite" on any item below to add it here!</em></li>`;
+            return;
+        }
+
+        // Loop through saved favorite IDs and create list elements for them
+        savedFavorites.forEach(productId => {
+            // Find the matching button or product name on the page
+            const matchingBtn = document.querySelector(`.favorite-btn[data-product="${productId}"]`);
+            if (matchingBtn) {
+                const productLi = matchingBtn.closest("li");
+                const productName = productLi.querySelector("strong").textContent;
+                
+                const li = document.createElement("li");
+                li.textContent = productName;
+                favoritesList.appendChild(li);
+            }
+        });
+    }
+
+    // Initialize button states and overall display on load
     favoriteButtons.forEach(button => {
         const productId = button.getAttribute("data-product");
         
-        // Set initial state
         if (savedFavorites.includes(productId)) {
             button.classList.add("favorited");
             button.textContent = "★ Favorited";
@@ -29,10 +54,9 @@ function initProductFavorites() {
             button.textContent = "☆ Favorite";
         }
 
-        // Add click listener
+        // Add click listener for toggling favorites
         button.addEventListener("click", function () {
             const id = this.getAttribute("data-product");
-            console.log("Clicked product:", id);
             
             if (savedFavorites.includes(id)) {
                 savedFavorites = savedFavorites.filter(item => item !== id);
@@ -46,7 +70,12 @@ function initProductFavorites() {
 
             // Save to localStorage
             localStorage.setItem("nsb_favorites", JSON.stringify(savedFavorites));
-            console.log("Updated favorites:", savedFavorites);
+            
+            // Refresh the separate favorites section dynamically
+            updateFavoritesDisplay();
         });
     });
+
+    // Run once on load to populate the favorites section
+    updateFavoritesDisplay();
 }
