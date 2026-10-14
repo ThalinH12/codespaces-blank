@@ -36,7 +36,8 @@ function initProductFavorites() {
                 
                 if (strongTag) {
                     const li = document.createElement("li");
-                    li.textContent = strongTag.textContent;
+                    // Grab just the product name text (strip out trailing colon if desired)
+                    li.textContent = strongTag.textContent.replace(":", "");
                     favoritesList.appendChild(li);
                 }
             }
