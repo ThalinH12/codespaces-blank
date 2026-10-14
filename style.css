@@ -68,4 +68,24 @@ footer {
     .flex-container {
         flex-direction: row; /* Puts content blocks side-by-side */
     }
+}/* Favorite Button Interactive States */
+.favorite-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.favorite-btn:hover {
+    background-color: #e2e6ea;
+}
+
+.favorite-btn.favorited {
+    background-color: #ffc107;
+    border-color: #e0a800;
+    color: #212529;
+    font-weight: bold;
 }
