@@ -29,20 +29,21 @@ function initProductFavorites() {
 
         // Loop through saved favorite IDs and create list elements for them
         savedFavorites.forEach(productId => {
-            // Find the matching button or product name on the page
             const matchingBtn = document.querySelector(`.favorite-btn[data-product="${productId}"]`);
             if (matchingBtn) {
                 const productLi = matchingBtn.closest("li");
-                const productName = productLi.querySelector("strong").textContent;
+                const strongTag = productLi.querySelector("strong");
                 
-                const li = document.createElement("li");
-                li.textContent = productName;
-                favoritesList.appendChild(li);
+                if (strongTag) {
+                    const li = document.createElement("li");
+                    li.textContent = strongTag.textContent;
+                    favoritesList.appendChild(li);
+                }
             }
         });
     }
 
-    // Initialize button states and overall display on load
+    // Initialize button states on page load
     favoriteButtons.forEach(button => {
         const productId = button.getAttribute("data-product");
         
