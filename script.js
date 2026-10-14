@@ -1,123 +1,104 @@
-// script.js - North Star Bakery Touchstone 4
+// ==========================================
+// NORTH STAR BAKERY - MAIN SCRIPT
+// Organized with functions, objects, and localStorage
+// ==========================================
 
-// Data structures: Objects and Arrays to manage products and favorites
-const bakeryProducts = [
-    { id: 1, name: "Artisan Sourdough", category: "Breads" },
-    { id: 2, name: "Butter Croissant", category: "Pastries" },
-    { id: 3, name: "Honey Cardamom Knot", category: "Pastries" },
-    { id: 4, name: "Seasonal Fruit Tart", category: "Pastries" }
-];
-
-let userFavorites = JSON.parse(localStorage.getItem("bakeryFavorites")) || [];
-
-// Initialize features on page load
-document.addEventListener("DOMContentLoaded", () => {
-    setupInteractiveFeature();
-    setupFormValidation();
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize all site features on page load
+    initPreOrderCalculator();
+    initContactFormValidation();
 });
 
-// 1. Interactive Feature: Favorite Bakes Tracker
-function setupInteractiveFeature() {
-    const container = document.getElementById("interactive-feature-container");
-    if (!container) return;
+// --- 1. INTERACTIVE FEATURE & LOCAL STORAGE ---
+// Feature: Custom Pre-Order Calculator with localStorage persistence
+function initPreOrderCalculator() {
+    const calcForm = document.getElementById("order-calculator");
+    if (!calcForm) return;
 
-    let html = "<h3>Select Your Favorite Bakes</h3><div class='product-list'>";
-    bakeryProducts.forEach(product => {
-        const isFav = userFavorites.includes(product.name);
-        html += `<div class='product-item' style='margin-bottom: 10px;'>
-            <span><strong>${product.name}</strong> (${product.category})</span>
-            <button class='fav-btn' data-name='${product.name}' style='margin-left: 15px; padding: 5px 10px; cursor: pointer;'>${isFav ? "Remove Favorite" : "Add to Favorites"}</button>
-        </div>`;
-    });
-    html += "</div><div id='fav-output' style='margin-top: 15px;'><h4>Your Saved Favorites:</h4><ul id='fav-list'></ul></div>";
-    container.innerHTML = html;
+    const itemSelect = document.getElementById("item-select");
+    const quantityInput = document.getElementById("quantity-input");
+    const totalDisplay = document.getElementById("total-price-display");
 
-    updateFavoritesDisplay();
+    // Pre-defined menu items with prices
+    const menuItems = {
+        sourdough: 8.50,
+        croissant: 4.00,
+        knot: 5.00,
+        cake: 35.00
+    };
 
-    container.addEventListener("click", (e) => {
-        if (e.target.classList.contains("fav-btn")) {
-            const productName = e.target.getAttribute("data-name");
-            toggleFavorite(productName);
+    // Load previously saved data from localStorage if available
+    const savedItem = localStorage.getItem("nsb_selected_item");
+    const savedQty = localStorage.getItem("nsb_selected_qty");
+
+    if (savedItem && itemSelect) itemSelect.value = savedItem;
+    if (savedQty && quantityInput) quantityInput.value = savedQty;
+
+    function calculateTotal() {
+        const selectedKey = itemSelect.value;
+        const qty = parseInt(quantityInput.value) || 0;
+        const unitPrice = menuItems[selectedKey] || 0;
+        const total = unitPrice * qty;
+
+        if (totalDisplay) {
+            totalDisplay.textContent = `$${total.toFixed(2)}`;
         }
-    });
-}
 
-function toggleFavorite(productName) {
-    const index = userFavorites.indexOf(productName);
-    if (index > -1) {
-        userFavorites.splice(index, 1);
-    } else {
-        userFavorites.push(productName);
+        // Save state to localStorage automatically
+        localStorage.setItem("nsb_selected_item", selectedKey);
+        localStorage.setItem("nsb_selected_qty", qty);
     }
-    
-    // Save to localStorage
-    localStorage.setItem("bakeryFavorites", JSON.stringify(userFavorites));
-    setupInteractiveFeature();
+
+    // Add event listeners for interaction
+    itemSelect.addEventListener("change", calculateTotal);
+    quantityInput.addEventListener("input", calculateTotal);
+
+    // Run once on load to display initial calculation
+    calculateTotal();
 }
 
-function updateFavoritesDisplay() {
-    const favList = document.getElementById("fav-list");
-    if (!favList) return;
-    
-    favList.innerHTML = "";
-    if (userFavorites.length === 0) {
-        favList.innerHTML = "<li>No favorites selected yet.</li>";
-    } else {
-        userFavorites.forEach(item => {
-            const li = document.createElement("li");
-            li.textContent = item;
-            favList.appendChild(li);
-        });
-    }
-}
+// --- 2. FORM VALIDATION & USER FEEDBACK ---
+// Feature: Validates user input and provides clear feedback messages
+function initContactFormValidation() {
+    const contactForm = document.getElementById("contact-form");
+    if (!contactForm) return;
 
-// 2. Form Validation Feature
-function setupFormValidation() {
-    const form = document.querySelector("form");
-    if (!form) return;
+    const nameInput = document.getElementById("customer-name");
+    const emailInput = document.getElementById("customer-email");
+    const feedbackDiv = document.getElementById("form-feedback");
 
-    form.addEventListener("submit", (e) => {
-        let isValid = true;
-        clearErrors();
+    contactForm.addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent default submission to validate first
 
-        // Required field check for Name
-        const nameInput = document.getElementById("name") || form.querySelector("input[name='name']");
-        if (nameInput && nameInput.value.trim() === "") {
-            showError(nameInput, "Please enter your name for the pre-order.");
-            isValid = false;
+        let errors = [];
+
+        // Validate Name
+        if (!nameInput.value.trim()) {
+            errors.push("Please enter your full name.");
         }
 
-        // Email validation check
-        const emailInput = document.getElementById("email") || form.querySelector("input[name='email']");
-        if (emailInput) {
-            const emailValue = emailInput.value.trim();
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailValue === "") {
-                showError(emailInput, "Email address is required.");
-                isValid = false;
-            } else if (!emailPattern.test(emailValue)) {
-                showError(emailInput, "Please enter a valid email address (e.g., name@example.com).");
-                isValid = false;
-            }
+        // Validate Email format
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInput.value.trim() || !emailPattern.test(emailInput.value.trim())) {
+            errors.push("Please enter a valid email address (e.g., name@example.com).");
         }
 
-        if (!isValid) {
-            e.preventDefault();
+        // Display Feedback
+        if (errors.length > 0) {
+            feedbackDiv.style.color = "#d9534f"; // Error red
+            feedbackDiv.innerHTML = "<strong>Please fix the following error(s):</strong><br><ul>" + 
+                errors.map(err => `<li>${err}</li>`).join("") + "</ul>";
+        } else {
+            feedbackDiv.style.color = "#5cb85c"; // Success green
+            feedbackDiv.innerHTML = "Thank you! Your pre-order request has been validated and saved successfully.";
+            
+            // Save successful submission state optionally
+            localStorage.setItem("nsb_last_submitted_name", nameInput.value.trim());
+
+            // Optionally reset form after short delay
+            setTimeout(() => {
+                contactForm.reset();
+            }, 3000);
         }
     });
-}
-
-function showError(inputElement, message) {
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "error-message";
-    errorDiv.style.color = "#d9534f";
-    errorDiv.style.fontSize = "0.85rem";
-    errorDiv.style.marginTop = "4px";
-    errorDiv.textContent = message;
-    inputElement.parentNode.appendChild(errorDiv);
-}
-
-function clearErrors() {
-    const errors = document.querySelectorAll(".error-message");
-    errors.forEach(err => err.remove());
 }
